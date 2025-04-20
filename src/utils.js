@@ -145,6 +145,32 @@ export class WSSharedDoc extends Y.Doc {
         debouncer(() => callbackHandler(/** @type {WSSharedDoc} */ (doc)))
       })
     }
+     /* ─ 2) Persist every CRDT update via Supabase RPC ─ */
+     this.on('update', async update => {
+       try {
+         const base64 = Buffer.from(update).toString('base64')
+         const resp   = await fetch(process.env.PERSIST_URL, {
+           method:  'POST',
+           headers: {
+             'Content-Type':  'application/json',
+             'apikey':        process.env.SUPABASE_KEY,
+             'Authorization': `Bearer ${process.env.SUPABASE_KEY}`
+           },
+           body: JSON.stringify({
+             _doc_id: this.name,
+             _action: 'upsert',
+             _doc:    base64
+           })
+         })
+         if (!resp.ok) {
+           console.error('[PERSIST] upsert failed', await resp.text())
+         } else {
+           console.log('[PERSIST] persisted', doc.name)
+         }
+       } catch (e) {
+         console.error('[PERSIST] exception on upsert', e)
+       }
+     })
     this.whenInitialized = contentInitializor(this)
   }
 }
