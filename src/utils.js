@@ -248,6 +248,32 @@ const pingTimeout = 30000
  * @param {any} opts
  */
 export const setupWSConnection = (conn, req, { docName = (req.url || '').slice(1).split('?')[0], gc = true } = {}) => {
+  /* 1) Load persisted Yjs state on first connect */
+   (async () => {
+     try {
+       const resp = await fetch(process.env.PERSIST_URL, {
+         method:  'POST',
+         headers: {
+           'Content-Type':  'application/json',
+           'apikey':        process.env.SUPABASE_KEY,
+           'Authorization': `Bearer ${process.env.SUPABASE_KEY}`
+         },
+         body: JSON.stringify({ _doc_id: docName, _action: 'select' })
+       })
+       if (resp.ok) {
+         const rows = await resp.json()
+         if (Array.isArray(rows) && rows.length) {
+           const buf = Buffer.from(rows[0].doc, 'base64')
+           Y.applyUpdate(getYDoc(docName), new Uint8Array(buf))
+           console.log('[PERSIST] loaded state for', docName)
+         }
+       } else {
+         console.error('[PERSIST] load failed', await resp.text())
+       }
+     } catch (e) {
+       console.error('[PERSIST] exception on load', e)
+     }
+   })()
   conn.binaryType = 'arraybuffer'
   // get doc, initialize if it does not exist yet
   const doc = getYDoc(docName, gc)
