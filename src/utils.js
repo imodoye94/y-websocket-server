@@ -165,7 +165,7 @@ export class WSSharedDoc extends Y.Doc {
          if (!resp.ok) {
            console.error('[PERSIST] upsert failed', await resp.text())
          } else {
-           console.log('[PERSIST] persisted', doc.name)
+           console.log('[PERSIST] persisted', this.name)
          }
        } catch (e) {
          console.error('[PERSIST] exception on upsert', e)
