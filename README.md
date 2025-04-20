@@ -7,6 +7,8 @@ handles authentication and authorization. Websockets also send header
 information and cookies, so you can use existing authentication mechanisms with
 this server.
 
+> This now includes a Supabase UPSERT and SELECT persistence layer, ensure to include their env vars in the document and also make sure the rpc function it calls exists in the database along with the `yjs_documents` table too. Check edge-functions/functions/crud_yjs_docs for details.
+
 ## Quick Start
 
 ### Install dependencies
